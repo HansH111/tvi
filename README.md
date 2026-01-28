@@ -5,14 +5,14 @@ TVI is a small, fast terminal-based text editor inspired by Vim. It's based on t
 ## Features
 
 ### Core Editing
-- **Vi-compatible modes**: Normal, Insert, Visual, and Command-line modes
+- **Vi-compatible modes**: Normal, Insert and Command-line modes
 - **Basic Vi commands**: Navigation (h,j,k,l,w,b,0,$), editing (i,a,o,O,x,d,c,y,p), search (/), etc.
 - **Line-based operations**: dd, yy, p, etc.
 - **Word movements**: w, b, e for word navigation
 - **Undo/Redo**: Full undo (`u`) and redo (`Ctrl+R`) support with logical operation tracking
 
 ### Syntax Highlighting
-- **Dynamic syntax loading**: Syntax files loaded from `~/.config/tvi/syntax.{language}`
+- **Dynamic syntax loading**: Syntax files loaded from `~/.config/tvi/syntax.{language ext}`
 - **Supported languages**: C, C++, Python, JavaScript, Rust, Perl
 - **256-color support**: Full terminal color support
 - **Customizable**: Easy to add new languages or modify existing syntax
