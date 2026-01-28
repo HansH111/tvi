@@ -1,0 +1,76 @@
+# Redo Test Patterns for TVI  
+# Format: <crc> <pattern>
+# Commands tested: 0x12 (Ctrl+R for redo)
+#
+# 0x1b = Esc
+# 0x12 = Ctrl+R (redo)
+# These patterns test various redo scenarios
+#
+# --- basic redo after undo
+# Delete, undo, redo character deletion
+c4ea3ce4 llxdlu0x12
+# Delete, undo, redo character deletion multiple
+49317e4b ll2xdlu0x12
+# Insert, undo, redo character insertion
+78f37b00 iA0xbu0x12
+#
+# --- word operations
+# Delete word, undo, redo
+04f22afd dwu0x12
+# Change word, undo, redo  
+f1f581f1 cwaTEST0x1bu0x12
+# Delete multiple words, undo, redo
+37ec20ab 2dwu0x12
+#
+# --- line operations
+# Delete line, undo, redo
+7757c7ba jdd0x12
+# Delete multiple lines, undo, redo
+4c7b0946 j2dd0x12
+# Change line, undo, redo
+2bd9aa20 oaTEST0x1bu0x12
+#
+# --- movement operations
+# Movement with modification, undo, redo
+f9a844aa wwdld0x12
+# Multiple movements, undo, redo
+14353de3 jjwd0x12
+#
+# --- complex sequences
+# Multiple operations, undo, redo
+15b4da25 llxwwdld0x12
+# Sequential operations, undo all, redo all
+ff337cee llxd0x12wwdld0x12
+#
+# --- repeat operations  
+# Repeat, undo, redo
+ccfea386 ll4xd0x12
+# Complex repeat, undo, redo
+97405f61 yyPjjdd.d0x12
+#
+# --- boundary operations
+# Line start, undo, redo
+30c5a7ab 0dld0x12
+# Line end, undo, redo
+f2e07fc6 0x24dld0x12
+# File operations, undo, redo
+c024181e Gddd0x12
+#
+# --- count operations
+# Counted operations, undo, redo
+9440a6ee 5wdld0x12
+# Multiple counted, undo, redo
+75e9a533 2cwaTEST0x1bu0x12
+#
+# --- multiple redo
+# Multiple undos then multiple redos
+c7285683 llxd0x120x12
+# Complex multiple undos and redos  
+b67ade01 jdd0x12jdd0x120x120x12
+#
+# --- edge cases
+# Redo without undo (should have no effect)
+b3a5b380 0x12
+# Multiple redos without undo
+a28a403f 0x120x120x12
+#

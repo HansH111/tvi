@@ -1,0 +1,4 @@
+1 This is a test paragraph with multiple words.
+2 Here we have some text that has several words.
+3 The quick brown fox jumps over the lazy dog.
+4 Testing word movements and operations.

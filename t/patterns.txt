@@ -1,0 +1,107 @@
+# Default TVI Test Patterns
+# Format: <crc> <pattern>
+# 
+# 0x12 = Control+R
+# 0x1b = Esc
+# 0x24 = $
+#
+# These are the original default patterns converted to the new format
+#
+# --- del character
+21c0eec8 lldl
+71d463c8 ll2dl
+#
+# --- del line
+b0dc2016 jjdd
+28c74eb2 j2dd
+#
+# --- yank 2x line
+8517999f j2yyP
+5d750dee j2yyp
+#
+# --- go 2x down
+bb1bee25 jjdl
+f3ebee55 2jdl
+#
+# --- word movement
+3d72e8b3 wdl
+d961a96a 2wdl
+8ab3a908 wwdl
+73e58c08 bdl
+f97a6192 jjwwbdl
+6a8d6bb2 2bdl
+395f6bd0 wbdl
+#
+# --- line boundaries
+c3414771 ll0dl
+382f48a3 ww0x24dl
+#
+# --- file boundaries
+92f7366f jjggdl
+b340cb4c Gdl
+#
+# --- word operators
+f083ae02 dw
+dfabe26c 2dw
+41287cc9 ywp
+7a1ac53f 2ywllp
+2eec4755 2ywllP
+c8c883fa cwa0x1b
+d81b68ef 2cwa0x1b
+#
+# --- end of line operators
+aeefb977 d0x24
+b7ebd6e1 y0x24p
+63e4f420 5wc0x24a0x1b
+#
+# --- character operators
+3ece26bc dl
+a3633f7f 2dl
+a8f40d6c ylp
+ae3acad0 cla0x1b
+#
+# --- line operators
+3adaebbb dd
+aa540f85 2dd
+e331345e yyp
+077927c0 2yyp
+#
+# --- put operations
+5d750dee j2yyp
+8517999f j2yyP
+9a15eeff j2ddp
+5b767076 j2ddP
+#
+# --- insert mode
+e53c2557 iA0x1b
+bdf5f096 oa0x1b
+ad919741 Oa0x1b
+#
+# --- repeat
+665458bb jjdd.
+a85b7e31 yyPjjdd.
+45956f4d ll2dw.
+78317022 ll4x.
+#
+# --- count combinations
+23d929b4 jj10ldl
+0d2174c8 5wdl
+#
+# --- mixed operations
+e5a57015 ww5dl
+8d39c756 j2wdl
+#
+# --- character deletion and undo
+21c0eec8 lldl
+c3106c20 lldlu
+e5ed2420 llxxu
+#
+# --- character insertion and undo
+972e5c15 iA0x1bu
+#
+# --- line deletion and undo
+41e0e4ec j2ddu
+#
+# --- mixed operations
+c6fc5d1b 2wdlu
+6536cf1e ddu
