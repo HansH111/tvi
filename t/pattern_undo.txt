@@ -1,0 +1,63 @@
+# Undo Test Patterns for TVI
+# Format: <crc> <pattern>
+# Commands tested: 'u' (undo)
+#
+# 0x1b = Esc
+# These patterns test various undo scenarios
+#
+# --- single character operations
+# Delete and undo character deletion
+18fdc0c9 llxdlu
+# Multiple character deletion and undo  
+2980e4d0 ll2xdlu
+# Character insertion and undo
+972e5c15 iA0x1bu
+#
+# --- word operations
+# Delete word and undo
+d12e059d dwu
+# Change word and undo  
+8c56fe2e cwaTEST0x1bu
+# Delete multiple words and undo
+fa8337e8 2dwu
+#
+# --- line operations
+# Delete line and undo
+1ed67c57 jddu
+# Delete multiple lines and undo
+41e0e4ec j2ddu
+# Change line and undo
+050f260f oaTEST0x1bu
+#
+# --- movement operations  
+# Movement with modification and undo
+913707ec wwdlu
+# Multiple movements with modifications and undo
+f24dc341 jjwwdlu
+#
+# --- complex operations
+# Multiple modifications and single undo
+ce6c8b88 llxwwdliA0x1bu
+# Sequential modifications and multiple undos
+04494a3b llxuwwdlu
+#
+# --- repeat operations
+# Repeat with undo
+6dffedfb ll4x.u
+# Complex repeat and undo
+a022a570 yyPjjdd.u
+#
+# --- boundary operations
+# Line start deletion and undo
+76051024 0dlu
+# Line end deletion and undo  
+14b073ee 0x24dlu
+# File operations and undo
+2f59e72c Gddu
+#
+# --- count operations
+# Counted operations and undo
+9a03699c 5wdlu
+# Multiple counted operations and undo
+b18bc9ce 2cwaTEST0x1bu
+#

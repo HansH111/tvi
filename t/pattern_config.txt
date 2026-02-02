@@ -1,0 +1,17 @@
+# TVI Configuration Tests - Phase 1
+# Test :set command functionality with different tabstop values
+
+# Test 1: Show all settings (just verify command doesn't crash)
+a163ad11 :set0x0d
+
+# Test 2: Set tabstop to 8 and verify with basic tab insertion
+4b67ca44 :set tabstop=80x0diA0x1b
+
+# Test 3: Set tabstop back to 4 and verify
+0aae41dc :set tabstop=40x0diA0x1b
+
+# Test 4: Test invalid tabstop value
+81702511 :set tabstop=990x0ddl
+
+# Test 5: Test unknown setting
+b7eb031f :set unknown=value0x0ddl
