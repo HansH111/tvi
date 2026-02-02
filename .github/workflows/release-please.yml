@@ -1,0 +1,179 @@
+name: Release Please + Multi-Platform Builds
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release-please.outputs.release_created }}
+      upload_url: ${{ steps.release-please.outputs.upload_url }}
+      tag_name: ${{ steps.release-please.outputs.tag_name }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Release PR / Tag
+        id: release-please
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+
+      - name: Extract version from tag
+        if: ${{ steps.release-please.outputs.release_created }}
+        id: version
+        run: |
+          tag="${{ steps.release-please.outputs.tag_name }}"
+          version="${tag#v}"   # strip 'v' prefix if present
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+  build-alpine-x86_64:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Build static binary in Alpine (x86_64)
+        run: |
+          docker run --rm \
+            --platform linux/amd64 \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            alpine:latest \
+            sh -c "
+              apk add --no-cache build-base make binutils &&
+              make clean &&
+              make VERSION=${{ needs.release-please.outputs.version }} \
+                CFLAGS='-O2 -s -Wall' \
+                LDFLAGS='-static -no-pie -s' &&
+              ls -l tvi &&
+              cp tvi tvi-musl-static-x86_64
+            "
+
+      - name: Upload static binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-alpine-x86_64
+          path: tvi-musl-static-x86_64
+          if-no-files-found: error
+
+  build-alpine-arm64:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Build static binary in Alpine (arm64)
+        run: |
+          docker run --rm --platform linux/arm64 \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            alpine:latest \
+            sh -c "
+              apk add --no-cache build-base make binutils &&
+              make clean &&
+              make VERSION=${{ needs.release-please.outputs.version }} \
+                CFLAGS='-O2 -s -Wall' \
+                LDFLAGS='-static -no-pie -s' &&
+              ls -l tvi &&
+              cp tvi tvi-musl-static-arm64
+            "
+
+      - name: Upload arm64 binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-arm64
+          path: tvi-musl-static-arm64
+          if-no-files-found: error
+
+  build-ubuntu-x86_64:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Build dynamic binary (Ubuntu glibc x86_64)
+        run: |
+          make clean
+          make VERSION=${{ needs.release-please.outputs.version }} \
+            CFLAGS='-O2 -Wall'
+          ls -l tvi
+          mv tvi tvi-glibc-dynamic-x86_64
+
+      - name: Upload dynamic binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-ubuntu
+          path: tvi-glibc-dynamic-x86_64
+          if-no-files-found: error
+
+  publish-and-checksums:
+    needs:
+      - release-please
+      - build-alpine-x86_64
+      - build-alpine-arm64
+      - build-ubuntu-x86_64
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+
+      - name: Download all binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-binaries
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: List downloaded files (debug)
+        run: |
+          ls -Rla downloaded-binaries
+          find downloaded-binaries -type f
+
+      - name: Generate combined SHA256 checksums
+        run: |
+          cd downloaded-binaries
+          find . -type f \( -name "tvi-glibc-dynamic-x86_64" -o -name "tvi-musl-static-x86_64" -o -name "tvi-musl-static-arm64" \) -exec sha256sum {} + \
+            | sort -k 2 \
+            | sed 's|\./||' \
+            | tee ../checksums-sha256.txt
+
+          echo "" >> ../checksums-sha256.txt
+          echo "Generated by GitHub Actions on $(date -u +'%Y-%m-%d %H:%M UTC')" >> ../checksums-sha256.txt
+
+      - name: Upload binaries and checksums to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: |
+            downloaded-binaries/**/tvi-glibc-dynamic-x86_64
+            downloaded-binaries/**/tvi-musl-static-x86_64
+            downloaded-binaries/**/tvi-musl-static-arm64
+            checksums-sha256.txt
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
