@@ -31,8 +31,12 @@ $(TARGET): $(OBJ)
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCL) -DVERSION=\"$(VERSION)\" -c $< -o $@
 
+# Run tests
+check: t/docrc
+	cd t && ./runtests.sh all
+
 clean:
 	rm -f $(OBJ) $(TARGET)
 
-.PHONY: all tvi clean
+.PHONY: all tvi check clean
 
