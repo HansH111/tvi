@@ -3,6 +3,7 @@
 *.a
 *.so
 tvi
+make*.sh
 
 *.x86_64*
 *.arm64*

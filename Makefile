@@ -1,4 +1,5 @@
-# version if not set
+# version, cflags and ldflags can be set from external
+# if not set
 VERSION ?= 1.0.2
 CFLAGS ?= -s -Wall -Wextra -pedantic
 LDFLAGS ?= -s
@@ -24,7 +25,7 @@ TARGET = tvi
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CC) -Wl,--build-id=none -o $@ $^ $(LDFLAGS) 
+	$(CC) -Wl,--build-id=none -o $@ $^ $(LDFLAGS)
 	$(CC) -s -o t/docrc t/docrc.c
 
 %.o: %.c
