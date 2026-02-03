@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.6](https://github.com/HansH111/tvi/compare/v1.0.5...v1.0.6) (2026-02-03)
+
+
+### Bug Fixes
+
+* perform a check if all tests are a success ([3cfefb8](https://github.com/HansH111/tvi/commit/3cfefb89e35e54f417c6530dfcb6bd5043018b90))
+
 ## [1.0.5](https://github.com/HansH111/tvi/compare/1.0.4...v1.0.5) (2026-02-03)
 
 
