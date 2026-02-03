@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8](https://github.com/HansH111/tvi/compare/v1.0.7...v1.0.8) (2026-02-03)
+
+
+### Bug Fixes
+
+* ignore t/results and remove binary docrc ([0d75e2b](https://github.com/HansH111/tvi/commit/0d75e2bed6d8b04eee9049d751571613091d77c7))
+
 ## [1.0.7](https://github.com/HansH111/tvi/compare/v1.0.6...v1.0.7) (2026-02-03)
 
 
