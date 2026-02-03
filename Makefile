@@ -1,5 +1,4 @@
 # version, cflags and ldflags can be set from external
-# if not set
 VERSION ?= 1.0.2
 CFLAGS ?= -s -Wall -Wextra -pedantic
 LDFLAGS ?= -s
