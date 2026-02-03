@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.7](https://github.com/HansH111/tvi/compare/v1.0.6...v1.0.7) (2026-02-03)
+
+
+### Bug Fixes
+
+* adapted Makefile ([6f57a2f](https://github.com/HansH111/tvi/commit/6f57a2fbe0a2d6cfa98868f386898da77621d35c))
+* Trigger GitHub Actions re-run ([6a14bdb](https://github.com/HansH111/tvi/commit/6a14bdbf195980a18465e6af417bea601d381cf3))
+
 ## [1.0.6](https://github.com/HansH111/tvi/compare/v1.0.5...v1.0.6) (2026-02-03)
 
 
