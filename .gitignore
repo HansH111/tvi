@@ -5,6 +5,7 @@
 tvi
 make*.sh
 docrc
+t/results
 
 *.x86_64*
 *.arm64*
