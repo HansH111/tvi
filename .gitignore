@@ -4,6 +4,7 @@
 *.so
 tvi
 make*.sh
+docrc
 
 *.x86_64*
 *.arm64*
