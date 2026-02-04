@@ -19,7 +19,7 @@ char *editorRowsToString(int from, int norows, int *buflen) {
        p++;
      }
      *p = '\0';
-     *buflen = totlen+1;
+     *buflen = totlen;
   }
   return buf;
 }
