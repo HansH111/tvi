@@ -24,7 +24,9 @@ jobs:
         id: release-please
         uses: googleapis/release-please-action@v4
         with:
-          release-type: simple
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
 
       - name: Extract version from tag
         if: ${{ steps.release-please.outputs.release_created }}
