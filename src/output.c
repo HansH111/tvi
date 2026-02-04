@@ -85,16 +85,17 @@ void editorDrawRows(struct abuf *ab) {
   }
 }
 
-void editorDrawMessageBar(struct abuf *ab) {
+int editorDrawMessageBar(struct abuf *ab) {
   abAppend(ab, "\x1b[K", 3);
   abAppend(ab, "\x1b[m", 4);
 
   char msg[255];
-  int len;
+  int len, retlen=0;
   int msglen = strlen(E.statusmsg);
   int maxlen = E.screencols > 252 ? 250 : E.screencols - 2;
   if (E.statusmsg[0] == ':' || E.statusmsg[0] == '/') {
      len=snprintf(msg,maxlen,"%s",E.statusmsg);
+     retlen=len;
   } else {
       int perc=100;
       if (E.numrows) perc=((E.cy+1)*100) / E.numrows;
@@ -105,6 +106,7 @@ void editorDrawMessageBar(struct abuf *ab) {
   }
   abAppend(ab, msg, len);
   strcpy(E.statusmsg,"");
+  return retlen;
 }
 
 void editorRefreshScreen() {
@@ -116,13 +118,18 @@ void editorRefreshScreen() {
   abAppend(&ab, "\x1b[H", 3);
 
   editorDrawRows(&ab);
-  editorDrawMessageBar(&ab);
+  int rl=editorDrawMessageBar(&ab);
 
-  char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
+  if (rl == 0) {
+     char buf[32];
+     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
                                             (E.rx - E.coloff) + 1);
-  abAppend(&ab, buf, strlen(buf));
-
+     abAppend(&ab, buf, strlen(buf));
+  } else {
+     char buf[32];
+     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.screenrows+1,rl+1);
+     abAppend(&ab, buf, strlen(buf));
+  }
   abAppend(&ab, "\x1b[?25h", 6);
 
   write2screen(ab.b, ab.len);
