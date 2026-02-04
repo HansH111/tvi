@@ -68,33 +68,14 @@ void editorDrawRows(struct abuf *ab) {
       int current_color = -1;
       int j;
       for (j = 0; j < len; j++) {
-        if (iscntrl(c[j])) {
-          char sym = (c[j] <= 26) ? '@' + c[j] : '?';
-          abAppend(ab, "\x1b[7m", 4);
-          abAppend(ab, &sym, 1);
-          abAppend(ab, "\x1b[m", 3);
-          if (current_color != -1) {
-            char buf[16];
-            int clen = snprintf(buf, sizeof(buf), "\x1b[38;5;%dm", current_color);
-            abAppend(ab, buf, clen);
-          }
-        } else if (hl[j] == HL_NORMAL) {
-          if (current_color != -1) {
-            abAppend(ab, "\x1b[0;39m", 7);
-            current_color = -1;
-          }
-          abAppend(ab, &c[j], 1);
-        } else {
           int color = editorSyntaxToColor(hl[j]);
           if (color != current_color) {
             current_color = color;
             char buf[16];
-            
             int clen = snprintf(buf, sizeof(buf), "\x1b[38;5;%dm", color);
             abAppend(ab, buf, clen);
           }
           abAppend(ab, &c[j], 1);
-        }
       }
       abAppend(ab, "\x1b[0;39m", 7);
     }
@@ -115,8 +96,8 @@ void editorDrawMessageBar(struct abuf *ab) {
   if (E.statusmsg[0] == ':' || E.statusmsg[0] == '/') {
      len=snprintf(msg,maxlen,"%s",E.statusmsg);
   } else {
-      int perc=100;                                       
-      if (E.numrows) perc=((E.cy+1)*100) / E.numrows;                                                      
+      int perc=100;
+      if (E.numrows) perc=((E.cy+1)*100) / E.numrows;
       len=snprintf(msg,maxlen,"%s %s%s %d/%d %d%%%s%s",
                   E.mode == INSERT ? "I": "-",
                   E.filename?E.filename:"no file",E.dirty ? " [Modified]":"",
