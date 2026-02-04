@@ -51,13 +51,13 @@ void editorInsertNewline() {
   if (E.autoindent && E.cy > 0 && E.cy <= E.numrows) {
     erow *prev_row = &E.row[E.cy - 1];
     int indent_len = 0;
-    
+
     // Count leading spaces/tabs in previous line
-    while (indent_len < prev_row->size && 
+    while (indent_len < prev_row->size &&
            (prev_row->chars[indent_len] == ' ' || prev_row->chars[indent_len] == '\t')) {
       indent_len++;
     }
-    
+
     // Insert the indentation
     if (indent_len > 0) {
       for (int i = 0; i < indent_len; i++) {
@@ -153,6 +153,7 @@ void editorDeleteLines(int count) {
   if (E.cy > 0 && E.cx > E.row[E.cy].size) {
     E.cx = E.row[E.cy].size;
   }
+  for (int i = 0; i < E.numrows; i++) editorUpdateRow(&E.row[i]);
 
   E.dirty++;
   editorSetStatusMessage("Deleted %d line(s)", end - start + 1);
@@ -204,7 +205,7 @@ void editorDeleteWord(int count, int trim) {
   while (trim && end_cx > E.cx) {
      if (!isspace(row->chars[end_cx-1])) break;
      end_cx--;
-  } 
+  }
   editorTrackDeleteChar(E.cy, E.cx, &row->chars[E.cx], end_cx - E.cx);
   E.in_undo++;
   while (E.cx < end_cx) {
@@ -278,7 +279,7 @@ int editorCountChar(int at, int count) {
   erow *row = &E.row[E.cy];
   while (at < 0) {
      at++;
-     count--; 
+     count--;
   }
   while (max < count && (at+max) < row->size) max++;
   return max;
@@ -362,18 +363,18 @@ void editorYankEndOfLine(void) {
   editorSetStatusMessage("Yanked to EOL");
 }
 
-void editorPutChar(int after) {                            
-  int len = E.yank_len;                                 
+void editorPutChar(int after) {
+  int len = E.yank_len;
   if (after) E.cx++;
 
-  after=E.cx;                                                 
-  char *p = E.yank_buffer;                       
-  while (*p && len > 0) {                               
+  after=E.cx;
+  char *p = E.yank_buffer;
+  while (*p && len > 0) {
     editorInsertChar(*p);
     p++;
     len--;
-  }                                                  
-  E.cx = after;               
+  }
+  E.cx = after;
   editorSetStatusMessage("Put %d char(s)", E.yank_len);
 }
 
