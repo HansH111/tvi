@@ -331,6 +331,7 @@ void editorProcessInsertKeypress(int c) {
     case ARROW_LEFT:
     case ARROW_RIGHT:
       editorMoveCursor(c);
+      for (int i = 0; i < E.numrows; i++) editorUpdateRow(&E.row[i]);
       break;
     case '\r':
       editorInsertNewline();
@@ -348,6 +349,7 @@ void editorProcessInsertKeypress(int c) {
       if (E.cx > 0) E.cx--;
       E.mode = NORMAL;
       E.bold = 0;
+      for (int i = 0; i < E.numrows; i++) editorUpdateRow(&E.row[i]);
       break;
     default:
       editorInsertChar(c);
