@@ -141,7 +141,7 @@ void editorCommandAction(int from, int until, char act, int force, char *args) {
             write2screen("\x1b[H", 3);
             exit(0);
         }
-    } else if (act == 'q') { 
+    } else if (act == 'q') {
         if (E.dirty && force == 0) {
             editorSetStatusMessage("file contains unsaved changes. Use q! to override");
         } else {
@@ -194,8 +194,8 @@ void editorProcessDefaultCommand() {
     /* trim line */
     for (int i=strlen(cmd) -1; (i>0 && cmd[i] <= 32); i--) cmd[i]='\0';
 
-    // can be: <number> or % . $ 
-    //         <number>,<number>cmd   
+    // can be: <number> or % . $
+    //         <number>,<number>cmd
     //         <cmd>
     int  p, no=0, range=0, force=0, number[2]={1, E.numrows};
     char act=0;
@@ -224,7 +224,7 @@ void editorProcessDefaultCommand() {
             number[0]=atoi(&cmd[0]);
             range=p+1;
             no++;
-        } else if (!isdigit(cmd[p])) {  // single number 
+        } else if (!isdigit(cmd[p]) || cmd[p+1]=='\0') {  // single number
             number[0]=atoi(cmd);
         }
     }
@@ -239,7 +239,7 @@ void editorProcessDefaultCommand() {
        return;
     }
     if (act == 'w' && cmd[p] && cmd[p] == 'q') {
-        act='W'; 
+        act='W';
         p++;
     }
     if (cmd[p] && cmd[p] == '!') {        // check if action is forced
