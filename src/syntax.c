@@ -36,18 +36,13 @@ void editorUpdateSyntax(erow *row) {
     char c = row->render[i];
     unsigned char hl = row->hl[i];
 
-    if (hl == HL_COMMENT) {
-      row->hl[i] = HL_COMMENT;
-      i++;
-      continue;
-    }
-
-    if (hl == HL_MLCOMMENT) {
+    if (in_comment || hl == HL_MLCOMMENT) {
       row->hl[i] = HL_MLCOMMENT;
       if (mce_len && !strncmp(row->render + i, mce, mce_len)) {
-        memset(row->hl + i, HL_NORMAL, mce_len);
+        memset(row->hl + i, HL_MLCOMMENT, mce_len);
         i += mce_len;
         row->hl_open_comment = 0;
+        in_comment=0;
         continue;
       } else {
         i++;
@@ -62,11 +57,17 @@ void editorUpdateSyntax(erow *row) {
       break;
     }
 
+    if (hl == HL_COMMENT) {
+      row->hl[i] = HL_COMMENT;
+      i++;
+      continue;
+    }
+
     if (mcs_len && mce_len && !in_string && !in_comment &&
         !strncmp(row->render + i, mcs, mcs_len)) {
       /* check if also includes an ending remark */
       if (strstr(row->render+i+mcs_len,mce)!=NULL) {
-         memset(row->hl+i+mcs_len,HL_COMMENT,row->rsize-i-mcs_len);
+         memset(row->hl+i,HL_COMMENT,row->rsize-i);
          break;
       }
       memset(row->hl + i, HL_MLCOMMENT, row->rsize - i);
@@ -103,12 +104,14 @@ void editorUpdateSyntax(erow *row) {
 
     if ((E.syntax->flags & HL_HIGHLIGHT_NUMBERS) &&
         (isdigit(c) || (c == '.' && i + 1 < row->rsize && isdigit(row->render[i + 1])))) {
-      row->hl[i] = HL_NUMBER;
-      while (i < row->rsize && !is_separator(row->render[i])) {
-        if (row->hl[i] == HL_NUMBER) row->hl[i] = HL_NUMBER;
-        i++;
+      if (i==0 || is_separator(row->render[i-1])) {
+         row->hl[i++] = HL_NUMBER;
+         while (i < row->rsize && !is_separator(row->render[i])) {
+            if (row->hl[i-1] == HL_NUMBER) row->hl[i] = HL_NUMBER;
+            i++;
+         }
+         continue;
       }
-      continue;
     }
 
     if (hl != HL_STRING && hl != HL_COMMENT) {
@@ -121,7 +124,9 @@ void editorUpdateSyntax(erow *row) {
         if (i + klen <= row->rsize &&
             !strncmp(row->render + i, keywords[j], klen) &&
             (i + klen == row->rsize || is_separator(row->render[i + klen]))) {
-          memset(row->hl + i, kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
+          if (i==0 || is_separator(row->render[i - 1]) ) {
+              memset(row->hl + i, kw2 ? HL_KEYWORD2 : HL_KEYWORD1, klen);
+          }
           i += klen;
           break;
         }
@@ -163,9 +168,10 @@ int editorSyntaxToColor(int hl) {
     case HL_STRING: return 135;
     case HL_NUMBER: return 134;
     case HL_MATCH: return 195;
-    case HL_NONPRINT: return 196; // Reddish for non-printable chars
+    case HL_NONPRINT: return 196;
     default: return 249;
   }
+  return 249;
 }
 
 int findSyntaxDirFile(char *dirnm, char *ext, char *fn, size_t maxlen) {
@@ -173,28 +179,28 @@ int findSyntaxDirFile(char *dirnm, char *ext, char *fn, size_t maxlen) {
     struct dirent *entry;
     char *ptr1,*ptr2;
 
-    #ifdef DEBUG                                         
-    fprintf(stderr, "# syntax dirnm %s ext=%s\n", dirnm,ext);    
-    #endif        
+    #ifdef DEBUG
+    fprintf(stderr, "# syntax dirnm %s ext=%s\n", dirnm,ext);
+    #endif
 
     folder = opendir(dirnm);
     if (folder == NULL) return 0;
     while ((entry = readdir(folder)) != NULL) {
-        if (strncmp(entry->d_name,"syntax.",7)==0 
+        if (strncmp(entry->d_name,"syntax.",7)==0
                 && (ptr1=strstr(entry->d_name,ext))!=NULL) {
             if (strlen(entry->d_name) < maxlen) {
                 strcpy(fn,entry->d_name);
                 ptr2=strchr(&ptr1[1],'.');
                 if (ptr2) *ptr2='\0';
 
-                #ifdef DEBUG                                         
-                fprintf(stderr, "- found %s [%s] = [%s]\n", fn,ptr1,ext);    
-                #endif        
+                #ifdef DEBUG
+                fprintf(stderr, "- found %s [%s] = [%s]\n", fn,ptr1,ext);
+                #endif
                 if (strcmp(ptr1,ext)==0) {
                     closedir(folder);
                     return 1;
-                } 
-            } 
+                }
+            }
         }
     }
     closedir(folder);
@@ -202,7 +208,7 @@ int findSyntaxDirFile(char *dirnm, char *ext, char *fn, size_t maxlen) {
     return 0;
 }
 
-// Find syntax file for an extension 
+// Find syntax file for an extension
 static char* findSyntaxFile(char *ext) {
     char path[PATH_MAX];
     char fn[31];
@@ -239,7 +245,7 @@ struct editorSyntax *loadSyntaxForFile(const char* filename) {
     char *syntax_fn=findSyntaxFile(ext);
     if (!syntax_fn) return NULL;
 
-    struct editorSyntax* syntax = parseSyntaxFile(syntax_fn);                      
+    struct editorSyntax* syntax = parseSyntaxFile(syntax_fn);
     if (syntax) free(syntax_fn);
     return syntax;
 }
