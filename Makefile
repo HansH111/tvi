@@ -1,4 +1,4 @@
-# version, cflags and ldflags can be set from external
+# version, cflags and ldflags defaults
 VERSION ?= 1.0.0-test
 CFLAGS ?= -s -Wall -Wextra -pedantic
 LDFLAGS ?= -s
