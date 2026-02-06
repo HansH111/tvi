@@ -143,6 +143,7 @@ struct editorConfig {
   char *last_cmd;
   size_t  last_len;
   size_t  last_pos;
+  char *repeat_cmd;
   char *cmd_buf;
   size_t cmd_len;
   size_t cmd_pos;

@@ -140,7 +140,7 @@ void editorRowDelChar(erow *row, int at) {
                                                                                  
   editorTrackDeleteChar(E.cy, at, &row->chars[at], 1);                           
 #if DEBUG                                                                        
-  fprintf(stderr," size=%d at=%d\n",row->size,at);                               
+  if (E.in_undo == 0) fprintf(stderr," size=%d at=%d\n",row->size,at);                               
 #endif                                                                           
   memmove(&row->chars[at], &row->chars[at + 1], row->size - at);                 
   row->size--;                                                                   

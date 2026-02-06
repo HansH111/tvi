@@ -155,6 +155,18 @@ int editorHandleNavigation(int c) {
   return stat;
 }
 
+void editorRepeatSave()
+{
+   if (E.last_cmd == NULL) return;
+   if (E.last_cmd[0] != '\x1b' && E.last_cmd[0] != '\0') {
+      if (E.repeat_cmd) free(E.repeat_cmd);
+      E.repeat_cmd = strdup(E.last_cmd);
+      if (E.last_pos >= E.last_len)  E.last_pos--; 
+      E.last_cmd[0] = '\0';
+      E.last_pos    = 0;
+   }
+}
+
 void editorProcessDoubleKeypress(int op, int secop) {
   int count = E.op_count > 0 ? E.op_count : 1;
 
@@ -194,11 +206,13 @@ void editorProcessDoubleKeypress(int op, int secop) {
              break;
        }
   }
+  if (E.mode != INSERT)  editorRepeatSave();
 }
 
 void editorProcessSingleKeypress(int c) {
   int count = E.op_count > 0 ? E.op_count : 1;
 
+  int repeat=0;
   switch (c) {
     case 'r':
       E.op_pending = 'r';
@@ -269,13 +283,13 @@ void editorProcessSingleKeypress(int c) {
       E.bold = 1;
       break;
     case '.':
-      if (E.last_cmd) {
-         size_t len = strlen(E.last_cmd);
+      if (E.repeat_cmd) {
+         size_t len = strlen(E.repeat_cmd);
 #if DEBUG
-         fprintf(stderr,"- lastcmd %ld [%s]\n",len,E.last_cmd);
+         fprintf(stderr,"- lastcmd %ld [%s]\n",len,E.repeat_cmd);
 #endif
          if (len < 250) {
-            E.cmd_buf = strdup(E.last_cmd);
+            E.cmd_buf = strdup(E.repeat_cmd);
             E.cmd_pos = 0;
             E.cmd_len = len;
             E.last_cmd[0]='\0';
@@ -285,6 +299,7 @@ void editorProcessSingleKeypress(int c) {
       break;
     case 'x':
       editorDeleteChar(count);
+      repeat=1;
       break;
     case ':':
       editorSetStatusMessage(":");
@@ -292,6 +307,7 @@ void editorProcessSingleKeypress(int c) {
       editorProcessDefaultCommand();
       break;
   }
+  if (repeat && E.mode != INSERT)  editorRepeatSave();
 }
 
 void editorProcessNormalKeypress(int c) {
@@ -345,6 +361,7 @@ void editorProcessInsertKeypress(int c) {
       editorDelForward();
       break;
     case '\x1b':
+      editorRepeatSave();
       editorSetStatusMessage("");
       if (E.cx > 0) E.cx--;
       E.mode = NORMAL;

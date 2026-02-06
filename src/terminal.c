@@ -85,14 +85,14 @@ int editorRecordKey(int c) {
       E.last_cmd=xmalloc(255);
       E.last_len=254;
   }
-  if (c == '\x1b') {
-     E.last_pos=0;
-  } else if (c != CTRL_KEY('r') && c != 'u') {
+  if (c != CTRL_KEY('r') && c != 'u') {
      if (E.last_pos < E.last_len && (c!='.' || E.mode == INSERT) ) {
          E.last_cmd[E.last_pos++] = c;
          E.last_cmd[E.last_pos]   = '\0';
      }
   }
+  if (c == '\x1b') E.last_pos=0;
+
   return c;
 }
 
