@@ -114,7 +114,7 @@ void editorUpdateSyntax(erow *row) {
       }
     }
 
-    if (hl != HL_STRING && hl != HL_COMMENT) {
+    if (keywords && hl != HL_STRING && hl != HL_COMMENT) {
       int j;
       for (j = 0; keywords[j]; j++) {
         int klen = strlen(keywords[j]);
@@ -158,20 +158,8 @@ int editorSyntaxToColor(int hl) {
       default: return E.syntax->colors[0];
     }
   }
-
-  // Fallback to hardcoded colors
-  switch (hl) {
-    case HL_COMMENT:
-    case HL_MLCOMMENT: return 73;
-    case HL_KEYWORD1: return 117;
-    case HL_KEYWORD2: return 48;
-    case HL_STRING: return 135;
-    case HL_NUMBER: return 134;
-    case HL_MATCH: return 195;
-    case HL_NONPRINT: return 196;
-    default: return 249;
-  }
-  return 249;
+  // return also white as default color
+  return 15;
 }
 
 int findSyntaxDirFile(char *dirnm, char *ext, char *fn, size_t maxlen) {
@@ -230,6 +218,12 @@ static char* findSyntaxFile(char *ext) {
         strcat(path,fn);
         return strdup(path);
     }
+    if (access(path, R_OK) == 0) return strdup(path);
+
+    snprintf(path, PATH_MAX, "%s/.config/tvi/syntax.default", home);
+    if (access(path, R_OK) == 0) return strdup(path);
+
+    strcpy(path,"/usr/local/share/tvi/syntax.default");
     if (access(path, R_OK) == 0) return strdup(path);
 
     return NULL;

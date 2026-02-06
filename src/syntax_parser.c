@@ -51,6 +51,7 @@ struct editorSyntax* parseSyntaxFile(char* filename) {
     // Initialize defaults
     config->flags = 0;
     config->keywstr = NULL;
+    for (int i=0; i<8; i++) config->colors[i]=15;
 
 #if DEBUG
   fprintf(stderr,"# syntax load %s\n",filename);
@@ -61,11 +62,7 @@ struct editorSyntax* parseSyntaxFile(char* filename) {
        return NULL;
     }
     config->keywords = split_space_separated(config->keywstr);
-    if (config->keywstr) free(config->keywstr);                                                                                 
-    if (config->keywords == NULL) {
-        free(config);
-        return NULL;
-    }
+    if (config->keywstr) free(config->keywstr);
     return config;
 }
 
@@ -125,8 +122,8 @@ static char* join_strings(char *keywords, char *str) {
         keywords=malloc(strlen(str)+1);
         if (keywords) strcpy(keywords,str);
     }
-    return keywords; 
-}    
+    return keywords;
+}
 
 // Parse space-separated color codes
 static int parse_colors(char *str, int *colors, int max_colors) {
