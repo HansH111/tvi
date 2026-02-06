@@ -39,8 +39,10 @@ void editorPushUndoEntry(struct undoEntry *entry) {
   }
 
 #if DEBUG
-   fprintf(stderr,"- push undo %d-%d t=%d y=%d x=%d l=%ld\n",
+   fprintf(stderr,"- push undo %d-%d t=%d y=%d x=%d l=%ld",
            E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
+   fprintf(stderr,"\n");
 #endif
 
   struct undoEntry *new_entry = &E.undo_stack[E.undo_count];
@@ -77,8 +79,10 @@ void editorRedo() {
   E.redo_count--;
   struct undoEntry *entry = &E.redo_stack[E.redo_pos];
 #if DEBUG
-   fprintf(stderr,"- pop  redo %d-%d t=%d y=%d x=%d l=%ld\n",
+   fprintf(stderr,"- pop  redo %d-%d t=%d y=%d x=%d l=%ld",
                 E.redo_pos,E.redo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
+   fprintf(stderr,"\n");
 #endif
   E.in_redo = 1;
   switch (entry->type) {
@@ -163,6 +167,7 @@ void editorRedo() {
 
     case UNDO_MODIFY_CHAR:
       if (entry->cy < E.numrows && entry->text && entry->text_len > 0) {
+        E.cy = entry->cy;
         editorRowUpdate(&E.row[entry->cy], entry->cx, entry->text,entry->text_len);
         E.cy = entry->cy;
         E.cx = entry->cx - entry->text_len;
@@ -173,6 +178,7 @@ void editorRedo() {
 
     case UNDO_MODIFY_LINE:
       if (E.cy < E.numrows && entry->text) {
+        E.cy = entry->cy;
         free(E.row[E.cy].chars);
         free(E.row[E.cy].render);
         free(E.row[E.cy].hl);
@@ -207,8 +213,10 @@ void editorRedo() {
   undo_entry->text_len = entry->text_len;
   undo_entry->line_count = entry->line_count;
 #if DEBUG
-   fprintf(stderr,"  push undo %d-%d t=%d y=%d x=%d l=%ld\n",
+   fprintf(stderr,"  push undo %d-%d t=%d y=%d x=%d l=%ld",
                 E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
+   fprintf(stderr,"\n");
 #endif
   E.undo_count++;
   E.undo_pos = E.undo_count;
@@ -227,8 +235,10 @@ void editorUndo() {
 
   E.in_undo = 1;
 #if DEBUG
-   fprintf(stderr,"- pop  undo %d-%d t=%d y=%d x=%d l=%ld\n",
+   fprintf(stderr,"- pop  undo %d-%d t=%d y=%d x=%d l=%ld",
                 E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
+   fprintf(stderr,"\n");
 #endif
 
   switch (entry->type) {
@@ -286,6 +296,7 @@ void editorUndo() {
 
     case UNDO_MODIFY_CHAR:
       if (entry->cy < E.numrows && entry->text && entry->text_len > 0) {
+        E.cy = entry->cy;
         editorRowUpdate(&E.row[entry->cy], entry->cx, entry->text, entry->text_len);
         E.cy = entry->cy;
         E.cx = entry->cx;
@@ -294,6 +305,7 @@ void editorUndo() {
 
     case UNDO_MODIFY_LINE:
       if (E.cy < E.numrows && entry->text) {
+        E.cy = entry->cy;
         free(E.row[E.cy].chars);
         free(E.row[E.cy].render);
         free(E.row[E.cy].hl);
@@ -327,8 +339,10 @@ void editorUndo() {
   redo_entry->text_len = entry->text_len;
   redo_entry->line_count = entry->line_count;
 #if DEBUG
-   fprintf(stderr,"  push redo %d-%d t=%d y=%d x=%d l=%ld\n",
+   fprintf(stderr,"  push redo %d-%d t=%d y=%d x=%d l=%ld",
                 E.redo_pos,E.redo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
+   fprintf(stderr,"\n");
 #endif
   E.redo_count++;
   E.redo_pos = E.redo_count;
