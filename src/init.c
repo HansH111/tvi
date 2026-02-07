@@ -47,6 +47,7 @@ void initEditor(int ttymode) {
   editorInitConfig();
 
   // Initialize undo system
+  E.undo_pending_entry = -1;
   E.undo_stack = xmalloc(sizeof(struct undoEntry) * MAX_UNDO);
   E.redo_stack = xmalloc(sizeof(struct undoEntry) * MAX_UNDO);
   E.undo_count = 0;

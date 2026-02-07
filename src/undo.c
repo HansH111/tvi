@@ -56,6 +56,24 @@ void editorPushUndoEntry(struct undoEntry *entry) {
   E.undo_pos=E.undo_count;
 }
 
+void editorMergeUndo() {
+  if (E.undo_pending_entry < 0) return; // No valid pending entry
+  if (E.undo_pos <= E.undo_pending_entry) {
+    E.undo_pending_entry = -1;
+    return; // Entry is no longer valid, skip merge
+  }
+  // Get the pending entry
+  struct undoEntry *pending = &E.undo_stack[E.undo_pending_entry];
+
+  // For simplicity, we'll update the pending entry to reflect the final state
+  // This is a simplified approach - more complex merging could be done
+  erow *row = &E.row[pending->cy];
+  free(pending->text);  // Free old text
+  pending->text = strdup(row->chars);
+  pending->text_len = row->size;
+  E.undo_pending_entry = -1;
+}
+
 void editorPushUndo(int type, int cy, int cx, char *text, size_t text_len, int line_count) {
   if (E.in_undo || E.in_redo) return;
   struct undoEntry entry;
@@ -75,9 +93,18 @@ void editorRedo() {
     return;
   }
 
-  E.redo_pos--;
-  E.redo_count--;
-  struct undoEntry *entry = &E.redo_stack[E.redo_pos];
+  int noredopos=0;
+  struct undoEntry *entry;
+  erow *row;
+  do {
+     E.redo_pos--;
+     E.redo_count--;
+     noredopos++;
+     entry = &E.redo_stack[E.redo_pos];
+     row = &E.row[entry->cy];
+  } while (E.redo_pos>0 && noredopos < 2 && entry->type == UNDO_MODIFY_LINE 
+           && strncmp(row->chars,entry->text,entry->text_len)==0);
+  if (noredopos == 2 && entry->type != UNDO_MODIFY_LINE) noredopos--;
 #if DEBUG
    fprintf(stderr,"- pop  redo %d-%d t=%d y=%d x=%d l=%ld",
                 E.redo_pos,E.redo_count,entry->type,entry->cy,entry->cx,entry->text_len);
@@ -197,29 +224,32 @@ void editorRedo() {
 //  E.redo_pos++;
   E.dirty++;
 
-  // Push the redone entry to undo stack
-  if (E.undo_count >= MAX_UNDO) {
-    editorFreeUndoEntry(&E.undo_stack[0]);
-    memmove(&E.undo_stack[0], &E.undo_stack[1],
-            sizeof(struct undoEntry) * (E.undo_count - 1));
-    E.undo_count--;
-  }
+  for (int i=noredopos - 1; i>=0; i--) {
+      // Push the redone entry to undo stack
+      if (E.undo_count >= MAX_UNDO) {
+        editorFreeUndoEntry(&E.undo_stack[0]);
+        memmove(&E.undo_stack[0], &E.undo_stack[1],
+                sizeof(struct undoEntry) * (E.undo_count - 1));
+        E.undo_count--;
+      }
 
-  struct undoEntry *undo_entry = &E.undo_stack[E.undo_count];
-  undo_entry->type = entry->type;
-  undo_entry->cy = entry->cy;
-  undo_entry->cx = entry->cx;
-  undo_entry->text = entry->text ? strdup(entry->text) : NULL;
-  undo_entry->text_len = entry->text_len;
-  undo_entry->line_count = entry->line_count;
+      struct undoEntry *undo_entry = &E.undo_stack[E.undo_count];
+      entry = &E.redo_stack[E.redo_pos+i];
+      undo_entry->type = entry->type;
+      undo_entry->cy = entry->cy;
+      undo_entry->cx = entry->cx;
+      undo_entry->text = entry->text ? strdup(entry->text) : NULL;
+      undo_entry->text_len = entry->text_len;
+      undo_entry->line_count = entry->line_count;
 #if DEBUG
    fprintf(stderr,"  push undo %d-%d t=%d y=%d x=%d l=%ld",
                 E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
    if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
    fprintf(stderr,"\n");
 #endif
-  E.undo_count++;
-  E.undo_pos = E.undo_count;
+      E.undo_count++;
+      E.undo_pos = E.undo_count;
+ }
 }
 
 void editorUndo() {
@@ -229,17 +259,26 @@ void editorUndo() {
     return;
   }
 
-  E.undo_pos--;
-  E.undo_count--;
-  struct undoEntry *entry = &E.undo_stack[E.undo_pos];
-
-  E.in_undo = 1;
+  int noundopos=0;
+  struct undoEntry *entry;
+  erow *row;
+  do {
+     E.undo_pos--;
+     E.undo_count--;
+     noundopos++;
+     entry = &E.undo_stack[E.undo_pos];
 #if DEBUG
-   fprintf(stderr,"- pop  undo %d-%d t=%d y=%d x=%d l=%ld",
-                E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
+   fprintf(stderr,"- pop %d undo %d-%d t=%d y=%d x=%d l=%ld",
+                noundopos,E.undo_pos,E.undo_count,entry->type,entry->cy,entry->cx,entry->text_len);
    if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
    fprintf(stderr,"\n");
 #endif
+     row = &E.row[entry->cy];
+  } while (E.undo_pos>0 && noundopos < 2 && entry->type == UNDO_MODIFY_LINE 
+           && strncmp(row->chars,entry->text,entry->text_len)==0);
+  if (noundopos==2 && entry->type != UNDO_MODIFY_LINE) noundopos--;
+
+  E.in_undo = 1;
 
   switch (entry->type) {
     case UNDO_INSERT_LINE:
@@ -323,29 +362,32 @@ void editorUndo() {
   E.in_undo = 0;
   E.dirty++;
 
-  // Push the undone entry to redo stack
-  if (E.redo_count >= MAX_UNDO) {
-    editorFreeUndoEntry(&E.redo_stack[0]);
-    memmove(&E.redo_stack[0], &E.redo_stack[1],
-            sizeof(struct undoEntry) * (E.redo_count - 1));
-    E.redo_count--;
-  }
+  for (int i=noundopos - 1; i>=0; i--) {
+     // Push the undone entry to redo stack
+     if (E.redo_count >= MAX_UNDO) {
+        editorFreeUndoEntry(&E.redo_stack[0]);
+        memmove(&E.redo_stack[0], &E.redo_stack[1],
+                sizeof(struct undoEntry) * (E.redo_count - 1));
+        E.redo_count--;
+     }
 
-  struct undoEntry *redo_entry = &E.redo_stack[E.redo_count];
-  redo_entry->type = entry->type;
-  redo_entry->cy = entry->cy;
-  redo_entry->cx = entry->cx;
-  redo_entry->text = entry->text ? strdup(entry->text) : NULL;
-  redo_entry->text_len = entry->text_len;
-  redo_entry->line_count = entry->line_count;
+     struct undoEntry *redo_entry = &E.redo_stack[E.redo_count];
+     entry = &E.undo_stack[E.undo_pos+i];
+     redo_entry->type = entry->type;
+     redo_entry->cy = entry->cy;
+     redo_entry->cx = entry->cx;
+     redo_entry->text = entry->text ? strdup(entry->text) : NULL;
+     redo_entry->text_len = entry->text_len;
+     redo_entry->line_count = entry->line_count;
 #if DEBUG
    fprintf(stderr,"  push redo %d-%d t=%d y=%d x=%d l=%ld",
                 E.redo_pos,E.redo_count,entry->type,entry->cy,entry->cx,entry->text_len);
    if (entry->text_len > 0)  fprintf(stderr," s=%.*s",(int)entry->text_len,entry->text);
    fprintf(stderr,"\n");
 #endif
-  E.redo_count++;
-  E.redo_pos = E.redo_count;
+     E.redo_count++;
+     E.redo_pos = E.redo_count;
+  }
 }
 
 void editorTrackInsertLine(int cy) {

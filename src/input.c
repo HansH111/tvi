@@ -261,7 +261,10 @@ void editorProcessSingleKeypress(int c) {
       E.cx++;
       // fall through
     case 'i':
-      if (E.numrows > 0) editorTrackModifyLine(E.cy, E.cx, E.row[E.cy].chars, E.row[E.cy].size);
+      if (E.numrows > 0) {
+         editorTrackModifyLine(E.cy, E.cx, E.row[E.cy].chars, E.row[E.cy].size);
+         E.undo_pending_entry=E.undo_pos;
+      }
       E.mode = INSERT;
       E.bold = 1;
       break;
@@ -271,6 +274,7 @@ void editorProcessSingleKeypress(int c) {
       E.cy++;
       E.cx = 0;
       editorTrackModifyLine(E.cy, E.cx, E.row[E.cy].chars, E.row[E.cy].size);
+      E.undo_pending_entry=E.undo_pos;
       E.mode = INSERT;
       E.bold = 1;
       break;
@@ -279,6 +283,7 @@ void editorProcessSingleKeypress(int c) {
       editorTrimTrailingSpaces(&E.row[E.cy]);
       E.cx = 0;
       editorTrackModifyLine(E.cy, E.cx, E.row[E.cy].chars, E.row[E.cy].size);
+      E.undo_pending_entry=E.undo_pos;
       E.mode = INSERT;
       E.bold = 1;
       break;
@@ -341,26 +346,37 @@ void editorProcessNormalKeypress(int c) {
 
 // in INSERT mode
 void editorProcessInsertKeypress(int c) {
+  int posx=-1;
+  int posy=-1;
   switch (c) {
     case ARROW_UP:
     case ARROW_DOWN:
     case ARROW_LEFT:
     case ARROW_RIGHT:
+      posx=E.cx;
+      posy=E.cy;
       editorMoveCursor(c);
       for (int i = 0; i < E.numrows; i++) editorUpdateRow(&E.row[i]);
       break;
     case '\r':
+      posx=E.cx;
+      posy=E.cy;
       editorInsertNewline();
       break;
-
     case BACKSPACE:
     case CTRL_KEY('h'):
+      posx=E.cx;
+      posy=E.cy;
       editorDelChar();
       break;
     case DEL_KEY:
+      posx=E.cx;
+      posy=E.cy;
       editorDelForward();
       break;
     case '\x1b':
+      posx=E.cx;
+      posy=E.cy;
       editorRepeatSave();
       editorSetStatusMessage("");
       if (E.cx > 0) E.cx--;
@@ -371,6 +387,14 @@ void editorProcessInsertKeypress(int c) {
     default:
       editorInsertChar(c);
       break;
+  }
+  if (posx>=0 && E.undo_pending_entry >= 0) {
+     // Get the pending entry
+     struct undoEntry *pending = &E.undo_stack[E.undo_pending_entry-1];
+     erow *row = &E.row[posy];
+     editorTrackModifyLine(posy, pending->cx, row->chars, row->size);
+     //if (E.undo_pending_entry >= 0) editorMergeUndo();
+     E.undo_pending_entry=-1;
   }
   E.op_pending = 0;
   E.op_count=0;

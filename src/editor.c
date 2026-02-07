@@ -159,28 +159,20 @@ void editorDeleteLines(int count) {
   editorSetStatusMessage("Deleted %d line(s)", end - start + 1);
 }
 
-void editorChangeLines(int count) {
-  if (E.cy >= E.numrows) return;
-
-  editorDeleteLines(count);
-  editorInsertRow(E.cy, "", 0);
-  E.mode = INSERT;
-  E.cx = 0;
-}
-
 void editorChangeToEndOfLine() {
   if (E.cy >= E.numrows) return;
 
   erow *row = &E.row[E.cy];
+  editorTrackModifyLine(E.cy, E.cx, row->chars, row->size);
+  E.undo_pending_entry=E.undo_pos;
+
   if (E.cx < row->size) {
-    editorTrackDeleteChar(E.cy, E.cx, &row->chars[E.cx], row->size - E.cx);
     E.in_undo++;
     for (int i = E.cx; i < row->size; i++) {
       editorRowDelChar(row, E.cx);
     }
     E.in_undo--;
   }
-  editorTrackModifyLine(E.cy, E.cx, row->chars, row->size);
   E.mode = INSERT;
 }
 
@@ -217,9 +209,12 @@ void editorDeleteWord(int count, int trim) {
 }
 
 void editorChangeWord(int count) {
-  editorDeleteWord(count,1);
   erow *row = &E.row[E.cy];
   editorTrackModifyLine(E.cy, E.cx, row->chars, row->size);
+  E.undo_pending_entry=E.undo_pos;
+  E.in_undo++;
+  editorDeleteWord(count,1);
+  E.in_undo--;
   E.mode = INSERT;
 }
 
@@ -301,9 +296,13 @@ void editorDeleteChar(int count) {
 
 void editorChangeChar(int count) {
   if (E.cy >= E.numrows) return;
-  editorDeleteChar(count);
   erow *row = &E.row[E.cy];
   editorTrackModifyLine(E.cy, E.cx, row->chars, row->size);
+  E.undo_pending_entry=E.undo_pos;
+
+  E.in_undo++;
+  editorDeleteChar(count);
+  E.in_undo--;
   E.mode = INSERT;
 }
 
@@ -341,9 +340,13 @@ void editorDeleteEndOfLine(void) {
 void editorChangeEndOfLine(void) {
   if (E.cy >= E.numrows) return;
 
-  editorDeleteEndOfLine();
   erow *row = &E.row[E.cy];
   editorTrackModifyLine(E.cy, E.cx, row->chars, row->size);
+  E.undo_pending_entry=E.undo_pos;
+
+  E.in_undo++;
+  editorDeleteEndOfLine();
+  E.in_undo--;
   E.mode = INSERT;
 }
 

@@ -152,6 +152,7 @@ struct editorConfig {
   char *last_search_query;
   int last_search_direction;
   int last_search_match_line;
+  int undo_pending_entry;
   struct undoEntry *undo_stack;
   struct undoEntry *redo_stack;
   int undo_count;
@@ -272,6 +273,7 @@ void editorFind();
 
 void editorUndo();
 void editorRedo();
+void editorMergeUndo();
 void editorPushUndo(int type, int cy, int cx, char *text, size_t text_len, int line_count);
 void editorPushUndoEntry(struct undoEntry *entry);
 void editorClearUndoStack();

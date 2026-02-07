@@ -12,13 +12,13 @@ c4ea3ce4 llxdlu0x12
 # Delete, undo, redo character deletion multiple
 49317e4b ll2xdlu0x12
 # Insert, undo, redo character insertion
-68c26861 iA0x1bu0x12
+f4f907db iA0x1bu0x12
 #
 # --- word operations
 # Delete word, undo, redo
 04f22afd dwu0x12
 # Change word, undo, redo  
-f1f581f1 cwaTEST0x1bu0x12
+1c6b8508 cwaTEST0x1bu0x12
 # Delete multiple words, undo, redo
 37ec20ab 2dwu0x12
 #
@@ -28,7 +28,7 @@ ac652c22 jddu0x12
 # Delete multiple lines, undo, redo
 b6097d4e j2ddu0x12
 # Change line, undo, redo
-2bd9aa20 oaTEST0x1bu0x12
+1371d47a oaTEST0x1bu0x12
 #
 # --- movement operations
 # Movement with modification, undo, redo
@@ -60,7 +60,7 @@ aaad9c32 0x24dlu0x12
 # Counted operations, undo, redo
 cc0d451a 5wdlu0x12
 # Multiple counted, undo, redo
-75e9a533 2cwaTEST0x1bu0x12
+8580c3ad 2cwaTEST0x1bu0x12
 #
 # --- multiple redo
 # Multiple undos then multiple redos
