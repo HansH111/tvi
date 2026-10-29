@@ -2,6 +2,10 @@
 
 TVI is a small, fast terminal-based text editor inspired by Vi. It's based on the [kilo](https://github.com/antirez/kilo) text editor, but implements basic Vi/Vim-like functionality instead of Emacs-style editing.
 
+
+Repo moved to: https://codeberg.org/HansH111/tvi.git
+
+
 ## Features
 
 ### Core Editing
